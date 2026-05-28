@@ -1,0 +1,48 @@
+
+services:
+  db:
+    image: postgres:16
+    # Use the official PostgreSQL image version 16 from Docker Hub
+    container_name: postgres_db
+    # gives custom name to the container for easier identification
+
+    # sets environment variables for PostgreSQL configuration, such as database name, user, and password
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    # maps the container's port 5432 to the host's port 5432, allowing access to the PostgreSQL database from outside the container
+    ports:
+      - "5433:5432"
+    # mounts a named volume called postgres_data to the container's /var/lib/postgresql/data directory, which is where PostgreSQL stores its data. This ensures that the database data persists even if the container is stopped or removed.
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    # this build command means Build a Docker image using the Dockerfile in the current directory
+
+    # gives custom name to the container for easier identification
+    container_name: django_backend
+    # runs the Django development server, binding it to all available network interfaces (0.0.0.0)
+    command: python manage.py runserver 0.0.0.0:8000
+    # mounts the current directory (where the docker-compose.yml file is located) to the /app directory inside the container. This allows for live code changes without needing to rebuild the image.
+    volumes:
+      - .:/app
+
+    ports:
+      - "8000:8000"
+    # defines the database container as a dependency for the backend service, ensuring that the database container is started before the backend container. This is important because the backend service needs to connect to the database when it starts up.
+    depends_on:
+      - db
+    # defines the environment variables for the backend service, which are used to configure the connection to the PostgreSQL database. These variables include the database name, user, password, host, and port. The backend service will use these variables to connect to the database container (db) when it starts up.
+    environment:
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_HOST: ${POSTGRES_HOST}
+      DB_PORT: ${POSTGRES_PORT}
+    # defines a named volume called postgres_data, which is used to persist the PostgreSQL database data. This volume is mounted to the /var/lib/postgresql/data directory inside the db container, ensuring that the database data is stored outside of the container and remains intact even if the container is stopped or removed.
+volumes:
+  postgres_data:
