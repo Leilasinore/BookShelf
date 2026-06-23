@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storefe-deployment
+  labels:
+    app: storefe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: storefe
+  template:
+    metadata:
+      labels:
+        app: storefe
+    spec:
+      containers:
+        - name: storefe
+          image: leilasinore/storefe:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: storefe-service
+spec:
+  selector:
+    app: storefe
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      
