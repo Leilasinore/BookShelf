@@ -3,7 +3,9 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import generics
 from .models import Book, Profile,Publisher,Category,Author
 from .serializers import BookSerializer, ProfileSerializer,PublisherSerializer,CategorySerializer,AuthorSerializer
+import logging
 
+logger = logging.getLogger(__name__)
 
 # -------------------------
 # BOOKS
@@ -12,6 +14,16 @@ from .serializers import BookSerializer, ProfileSerializer,PublisherSerializer,C
 class BookListAPIView(generics.ListCreateAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+
+
+    def get_queryset(self):
+     logger.info(
+        "Fetching books | user=%s | query_params=%s",
+        self.request.user,
+        dict(self.request.query_params),
+    )
+
+     return Book.objects.all()
 
     filter_backends = [
         DjangoFilterBackend,
@@ -38,6 +50,15 @@ class BookListAPIView(generics.ListCreateAPIView):
         "published_date",
         "created_at",
     ]
+    def perform_create(self, serializer):
+      book = serializer.save()
+
+      logger.info(
+        "Book created | id=%s | title=%s",
+        book.id,
+        book.title,
+    )
+    
 
 
 class BookDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
